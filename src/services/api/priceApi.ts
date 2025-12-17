@@ -92,13 +92,20 @@ export const fetchMarketPrice = async (market: Market): Promise<number> => {
 };
 
 /**
- * Query keys for React Query (COMMENTED OUT - Using WebSocket)
+ * Fetches 24hr price changes from SpeedTrading API
+ * 
+ * @param chainId - Chain ID (default 2741)
+ * @returns Object mapping symbols to their 24h percentage change (as string)
  */
-/*
-export const priceQueryKeys = {
-    all: ['prices'] as const,
-    markets: () => [...priceQueryKeys.all, 'markets'] as const,
-    market: (market: Market) => [...priceQueryKeys.all, 'market', market] as const,
+export const fetch24hChanges = async (chainId: number = 2741): Promise<Record<string, string>> => {
+    try {
+        const response = await apiClient.get<Record<string, string>>('/chart/24hr-changes', {
+            params: { chainId },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Failed to fetch 24h changes:', error);
+        return {};
+    }
 };
-*/
 

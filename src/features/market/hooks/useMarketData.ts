@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useMarketStore } from '../store/marketStore';
 import { useGameStore } from '../../game/store/gameStore';
 import { websocketPriceService, type IWebSocketPriceService } from '../../../services/api/websocketPriceService';
-import { fetchMarketPrice } from '../../../services/api/priceApi';
+import { fetchMarketPrice, fetch24hChanges } from '../../../services/api/priceApi';
 import { MARKET_PRICES } from '../../../config/constants';
 
 export const useMarketData = () => {
@@ -26,7 +26,11 @@ export const useMarketData = () => {
             setError(null);
             
             try {
-                const price = await fetchMarketPrice(selectedMarket);
+                // Parallel fetch for speed
+                const [price, changes24h] = await Promise.all([
+                    fetchMarketPrice(selectedMarket),
+                    fetch24hChanges()
+                ]);
                 
                 // Update the WebSocket service with initial price
                 websocketPriceService.setMarket(selectedMarket);
@@ -36,6 +40,18 @@ export const useMarketData = () => {
                 
                 // Update store with initial price
                 updatePrice(price);
+
+                // Update start price based on 24h change
+                if (changes24h && changes24h[selectedMarket]) {
+                    const changePercent = parseFloat(changes24h[selectedMarket]);
+                    // Calculate start price: start = current / (1 + change%)
+                    const calculatedStartPrice = price / (1 + (changePercent / 100));
+                    useMarketStore.getState().setStartPrice(calculatedStartPrice);
+                } else {
+                     // Fallback: Default 3% up
+                     useMarketStore.getState().setStartPrice(price / 1.03);
+                }
+
             } catch (err) {
                 console.error('Failed to fetch initial price:', err);
                 setError(err instanceof Error ? err : new Error('Failed to fetch price'));

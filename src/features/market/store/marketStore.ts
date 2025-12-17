@@ -18,6 +18,7 @@ interface MarketStore {
 
     setMarket: (market: Market) => void;
     updatePrice: (price: number) => void;
+    setStartPrice: (price: number) => void; // Manually set start price (e.g. from API)
 }
 
 export const useMarketStore = create<MarketStore>((set, get) => ({
@@ -42,5 +43,9 @@ export const useMarketStore = create<MarketStore>((set, get) => ({
 
     updatePrice: (price: number) => {
         set({ currentPrice: price });
+    },
+
+    setStartPrice: (price: number) => {
+        set({ startPrice: price });
     },
 }));

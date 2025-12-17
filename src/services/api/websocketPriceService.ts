@@ -27,9 +27,9 @@ export interface IWebSocketPriceService extends IPriceService {
     updatePriceFromQuery(price: number): void;
 }
 
-// WebSocket URL
+// WebSocket URL - explicitly set to wss as requested
 // Socket.IO will automatically add EIO=4&transport=websocket query params
-const WEBSOCKET_URL = 'https://data-api.speedtrading.pandora.fun';
+const WEBSOCKET_URL = 'wss://data-api.speedtrading.pandora.fun';
 
 class WebSocketPriceService implements IWebSocketPriceService {
     private callback: ((price: number) => void) | null = null;

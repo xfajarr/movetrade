@@ -70,6 +70,8 @@ export const BetStatus: React.FC = () => {
                         <span className="text-game-accent font-mono font-bold text-sm">${betAmount}</span>
                         <span className="text-gray-600 text-xs">|</span>
                         <span className="text-purple-400 font-mono font-bold text-sm">{leverage}x</span>
+                        <span className="text-gray-600 text-xs">|</span>
+                        <span className="text-cyan-400 font-mono font-bold text-sm">10s</span>
 
                         <svg
                             className={`w-3 h-3 text-gray-400 ml-1 transition-transform duration-200 ${showConfig ? 'rotate-180' : ''}`}
@@ -135,6 +137,14 @@ export const BetStatus: React.FC = () => {
                         >
                             +
                         </button>
+                    </div>
+                </div>
+
+                {/* Timeframe Display (Fixed at 10s) */}
+                <div className="mb-4">
+                    <div className="flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                        <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">Race Duration</span>
+                        <span className="text-cyan-400 font-bold">10s</span>
                     </div>
                 </div>
 

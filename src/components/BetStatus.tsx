@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { BET_DURATION_OPTIONS_MS } from '../config/constants';
+// Timeframe fixed to 10s
 import { BalanceDisplay } from './BalanceDisplay';
 
 interface BetStatusProps {
@@ -16,8 +16,7 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
   const setBetAmount = useGameStore((state) => state.setBetAmount);
   const leverage = useGameStore((state) => state.leverage);
   const setLeverage = useGameStore((state) => state.setLeverage);
-  const betDurationMs = useGameStore((state) => state.betDurationMs);
-  const setBetDuration = useGameStore((state) => state.setBetDuration);
+
   const balance = useGameStore((state) => state.player.balance);
 
   const [showConfig, setShowConfig] = useState(false);
@@ -126,24 +125,11 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
             </div>
           </div>
 
-          {/* 2. Select Time */}
+          {/* Race Duration (Fixed) */}
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-white uppercase tracking-wider">Timeframe</span>
-            <div className="grid grid-cols-3 gap-2">
-              {BET_DURATION_OPTIONS_MS.map((duration) => (
-                <button
-                  key={duration}
-                  onClick={() => setBetDuration(duration)}
-                  className={`
-                    py-1.5 rounded-lg text-[11px] font-bold transition-all border
-                    ${betDurationMs === duration
-                      ? 'bg-white/10 border-game-accent text-game-accent shadow-[0_0_10px_rgba(0,240,255,0.15)]'
-                      : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}
-                  `}
-                >
-                  {formatDurationLabel(duration)}
-                </button>
-              ))}
+            <span className="text-[11px] font-bold text-white uppercase tracking-wider">Race Duration</span>
+            <div className="bg-white/5 border border-white/5 rounded-lg py-1.5 text-center">
+              <span className="text-game-accent font-bold">10 seconds</span>
             </div>
           </div>
 
@@ -183,37 +169,64 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
         </div>
       )}
 
-      {/* MOBILE: Original Layout */}
+      {/* MOBILE: Compact Horizontal Layout */}
       <div className="lg:hidden">
-        {/* HEADER: Balance + Bet Toggle */}
-        <div className="flex justify-between items-center mb-2">
-          <BalanceDisplay compact />
+        {/* Single Row: Balance | Bet | Leverage */}
+        <div className="flex items-center justify-between gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-2 mb-2">
+          
+          {/* Balance - Compact */}
+          <div className="flex flex-col min-w-0">
+            <span className="text-[8px] text-gray-500 font-bold uppercase">Balance</span>
+            <span className="text-sm font-mono font-black text-white">${balance.toLocaleString()}</span>
+          </div>
 
-          <div className="flex items-center gap-2">
-            {activeBets.length > 0 && (
-              <div className="flex items-center gap-1 bg-white/5 border border-white/5 rounded-lg px-2 py-1.5 animate-pulse">
-                <div className="w-2 h-2 rounded-full bg-game-accent"></div>
-                <span className="text-[10px] font-bold text-game-accent uppercase">{activeBets.length} Active</span>
-              </div>
-            )}
+          {/* Divider */}
+          <div className="w-px h-8 bg-white/10" />
 
-            <button
-              onClick={() => setShowConfig(!showConfig)}
-              className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-lg px-3 py-1.5 transition-colors hover:bg-white/10 cursor-pointer"
-            >
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mr-1">BET</span>
-              <span className="text-game-accent font-mono font-bold text-sm">${betAmount}</span>
-              <span className="text-gray-600 text-xs">|</span>
-              <span className="text-purple-400 font-mono font-bold text-sm">{leverage}x</span>
-
+          {/* Bet Amount - Clickable */}
+          <button
+            onClick={() => setShowConfig(!showConfig)}
+            className="flex flex-col min-w-0 flex-1 items-center active:scale-95 transition-transform"
+          >
+            <span className="text-[8px] text-gray-500 font-bold uppercase">Bet</span>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-mono font-black text-cyan-400">${betAmount}</span>
               <svg
-                className={`w-3 h-3 text-gray-400 ml-1 transition-transform duration-200 ${showConfig ? 'rotate-180' : ''}`}
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${showConfig ? 'rotate-180' : ''}`}
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               >
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
-            </button>
-          </div>
+            </div>
+          </button>
+
+          {/* Divider */}
+          <div className="w-px h-8 bg-white/10" />
+
+          {/* Leverage */}
+          <button
+            onClick={() => setShowLeverage(!showLeverage)}
+            className="flex flex-col min-w-0 items-center active:scale-95 transition-transform"
+          >
+            <span className="text-[8px] text-gray-500 font-bold uppercase">Leverage</span>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-mono font-black text-purple-400">{leverage}x</span>
+              <svg
+                className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${showLeverage ? 'rotate-180' : ''}`}
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          {/* Active Bet Indicator */}
+          {activeBets.length > 0 && (
+            <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/30 rounded-lg px-2 py-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+              <span className="text-[8px] font-bold text-green-400">LIVE</span>
+            </div>
+          )}
         </div>
 
         {/* Configuration Popup */}
@@ -273,27 +286,11 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
             </div>
           </div>
 
-          {/* Timeframe Selector */}
+          {/* Race Duration (Fixed) */}
           <div className="mb-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">Timeframe</span>
-              <span className="text-[11px] text-gray-500">{formatDurationLabel(betDurationMs)}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {BET_DURATION_OPTIONS_MS.map((duration) => (
-                <button
-                  key={duration}
-                  onClick={() => setBetDuration(duration)}
-                  className={`
-                    py-1.5 rounded-lg text-[11px] font-bold transition-all border
-                    ${betDurationMs === duration
-                      ? 'bg-game-accent/10 border-game-accent text-game-accent shadow-[0_0_10px_rgba(0,240,255,0.2)]'
-                      : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}
-                  `}
-                >
-                  {formatDurationLabel(duration)}
-                </button>
-              ))}
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">Race Duration</span>
+              <span className="text-game-accent font-bold">10s</span>
             </div>
           </div>
 

@@ -49,15 +49,15 @@ export const PredictionButtons: React.FC<PredictionButtonsProps> = ({ verticalMo
   }
 
   return (
-    <div className="flex gap-4 lg:gap-8 w-full max-w-4xl mx-auto px-4 lg:px-0 h-full pb-6 items-end">
+    <div className="flex gap-3 sm:gap-4 w-full max-w-4xl mx-auto h-full items-end">
 
       <button
         onClick={() => handleBet(Direction.UP)}
         className={`
-          flex-1 h-24 lg:h-32 rounded-2xl relative overflow-hidden transition-all duration-200
+          flex-1 h-16 sm:h-20 lg:h-24 rounded-xl sm:rounded-2xl relative overflow-hidden transition-all duration-200
           flex flex-col items-center justify-center group
-          border-b-4 lg:border-b-8 shadow-[0_6px_0_rgb(0,204,125)] lg:shadow-[0_10px_0_rgb(0,204,125)] active:shadow-none active:translate-y-[6px] lg:active:translate-y-[10px] active:border-b-0
-          hover:scale-[1.02] cursor-pointer bg-game-up border-[#00cc7d]
+          border-b-[3px] sm:border-b-4 shadow-[0_4px_0_rgb(0,204,125)] sm:shadow-[0_6px_0_rgb(0,204,125)] active:shadow-none active:translate-y-[4px] sm:active:translate-y-[6px] active:border-b-0
+          active:scale-95 sm:hover:scale-[1.02] cursor-pointer bg-game-up border-[#00cc7d] touch-manipulation
         `}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
@@ -71,23 +71,22 @@ export const PredictionButtons: React.FC<PredictionButtonsProps> = ({ verticalMo
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="w-12 h-12 mb-1 relative z-10 drop-shadow-md text-game-dark transition-transform duration-300 group-hover:-translate-y-1"
+          className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mb-0.5 sm:mb-1 relative z-10 drop-shadow-md text-game-dark transition-transform duration-300"
         >
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
           <polyline points="16 7 22 7 22 13"></polyline>
         </svg>
 
-        <span className="font-black text-game-dark uppercase tracking-wider text-2xl relative z-10">UP</span>
-        <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-[-100%] transition-transform duration-500" />
+        <span className="font-black text-game-dark uppercase tracking-wider text-lg sm:text-xl lg:text-2xl relative z-10">UP</span>
       </button>
 
       <button
         onClick={() => handleBet(Direction.DOWN)}
         className={`
-          flex-1 h-24 lg:h-32 rounded-2xl relative overflow-hidden transition-all duration-200
+          flex-1 h-16 sm:h-20 lg:h-24 rounded-xl sm:rounded-2xl relative overflow-hidden transition-all duration-200
           flex flex-col items-center justify-center group
-          border-b-4 lg:border-b-8 shadow-[0_6px_0_rgb(204,0,68)] lg:shadow-[0_10px_0_rgb(204,0,68)] active:shadow-none active:translate-y-[6px] lg:active:translate-y-[10px] active:border-b-0
-          hover:scale-[1.02] cursor-pointer bg-game-down border-[#cc0044]
+          border-b-[3px] sm:border-b-4 shadow-[0_4px_0_rgb(204,0,68)] sm:shadow-[0_6px_0_rgb(204,0,68)] active:shadow-none active:translate-y-[4px] sm:active:translate-y-[6px] active:border-b-0
+          active:scale-95 sm:hover:scale-[1.02] cursor-pointer bg-game-down border-[#cc0044] touch-manipulation
         `}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
@@ -101,14 +100,13 @@ export const PredictionButtons: React.FC<PredictionButtonsProps> = ({ verticalMo
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="w-12 h-12 mb-1 relative z-10 drop-shadow-md text-white transition-transform duration-300 group-hover:translate-y-1"
+          className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mb-0.5 sm:mb-1 relative z-10 drop-shadow-md text-white transition-transform duration-300"
         >
           <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
           <polyline points="16 17 22 17 22 11"></polyline>
         </svg>
 
-        <span className="font-black text-white uppercase tracking-wider text-2xl relative z-10">DOWN</span>
-        <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-[-100%] transition-transform duration-500" />
+        <span className="font-black text-white uppercase tracking-wider text-lg sm:text-xl lg:text-2xl relative z-10">DOWN</span>
       </button>
     </div>
   );

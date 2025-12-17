@@ -1,0 +1,2 @@
+export { RacingChart } from './RacingChart';
+
