@@ -17,6 +17,18 @@ import { Direction } from '../../types';
 const MOTOGP_IMAGES: Record<string, string> = {
   BTC: '/motogp_orange_transparent.png',
   ETH: '/motogp_blue_transparent.png',
+  SOL: '/solanaLogoMark.svg', // Updated to use the new logo if appropriate, or keep as motogp bike if preferred. 
+                             // Wait, user said "like motogp race", but in step 542 we changed SOL icon to logo in TopBar. 
+                             // For the RACER, we should arguably stick to the bike images or the logo if that was the state.
+                             // Step 618 had: SOL: '/motogp_1.png', // Let's revert strictly to 618 content for safety.
+};
+
+// Actually, looking at 618:
+//   SOL: '/motogp_1.png',
+
+const MOTOGP_IMAGES_RESTORED: Record<string, string> = {
+  BTC: '/motogp_orange_transparent.png',
+  ETH: '/motogp_blue_transparent.png',
   SOL: '/motogp_1.png',
 };
 
@@ -269,7 +281,7 @@ export const RacingChart: React.FC = () => {
   }, [isRacing, currentBet, betDirection]);
 
   // Derived display values
-  const bikeImage = MOTOGP_IMAGES[selectedMarket] || MOTOGP_IMAGES['SOL'];
+  const bikeImage = MOTOGP_IMAGES_RESTORED[selectedMarket] || MOTOGP_IMAGES_RESTORED['SOL'];
   const priceChangeRaw = startPrice ? ((currentPrice - startPrice) / startPrice) * 100 : 0;
   const effectivePnl = betDirection === 'UP' ? priceChangeRaw : -priceChangeRaw;
   
@@ -313,20 +325,43 @@ export const RacingChart: React.FC = () => {
             <div className="absolute left-10 top-0 bottom-0 w-2 bg-white z-0" />
             <div className="absolute left-16 top-2 text-xs font-bold text-white/50 rotate-90 origin-left">START</div>
 
-            {/* FINISH LINE */}
+            {/* FINISH LINE (Restored) */}
             {(isRacing || raceResult) && (
               <div 
                 className="absolute top-0 bottom-0 z-20 flex flex-col items-center transition-all duration-300 ease-linear"
                 style={{ left: `${6 + (displayFinishPos / 100) * 90}%` }}
               >
+                 {/* Pole */}
                  <div className="absolute top-0 w-2 h-full bg-gray-400 border-x border-gray-600 shadow-xl" />
+                 
+                 {/* Flag Banner */}
                  <div className="absolute -top-3 w-32 h-8 bg-gray-900 border-2 border-gray-500 rounded flex items-center justify-center shadow-lg z-30">
                     <div className="text-[10px] text-white font-bold tracking-widest bg-black px-2 py-0.5">FINISH</div>
                     <div className="absolute top-0 left-0 w-4 h-full bg-[repeating-linear-gradient(45deg,#000_0,#000_5px,#fff_5px,#fff_10px)]" />
                     <div className="absolute top-0 right-0 w-4 h-full bg-[repeating-linear-gradient(45deg,#000_0,#000_5px,#fff_5px,#fff_10px)]" />
                  </div>
-                 <div className="w-8 h-full bg-[repeating-linear-gradient(45deg,#000_0,#000_10px,#fff_10px,#fff_20px)] opacity-90 shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+                 
+                 {/* Checkered Hologram Field */}
+                 <div className="w-8 h-full bg-[repeating-linear-gradient(45deg,#000_0,#000_10px,#fff_10px,#fff_20px)] opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
               </div>
+            )}
+
+            {/* CONNECTION TETHER (Beam) */}
+            {(isRacing) && (
+                <div 
+                    className="absolute top-1/2 -translate-y-1/2 h-1 z-20 pointer-events-none transition-all duration-300"
+                    style={{
+                        left: displayRacerPos < displayFinishPos 
+                            ? `calc(2.5rem + ${displayRacerPos}% * 0.9)` 
+                            : `calc(6% + ${displayFinishPos}% * 0.9)`,
+                        width: `calc(${Math.abs(displayRacerPos - displayFinishPos)}% * 0.9)`,
+                        background: displayRacerPos > displayFinishPos 
+                            ? 'linear-gradient(90deg, transparent, #00ff9d)' // Leading (Green)
+                            : 'linear-gradient(90deg, #ff0055, transparent)', // Trailing (Red)
+                        opacity: 0.6,
+                        filter: 'blur(2px)'
+                    }}
+                />
             )}
 
             {/* RACER */}
@@ -337,6 +372,16 @@ export const RacingChart: React.FC = () => {
                 }}
             >
                 <div className="relative -translate-x-1/2 group">
+                    {/* THRUSTERS (Fire Effect) */}
+                    {isRacing && (
+                        <div className={`absolute top-1/2 right-full -translate-y-1/2 w-16 h-8 origin-right transition-all duration-300 ${
+                            displayPnl >= 0 ? 'scale-100 opacity-100' : 'scale-50 opacity-30'
+                        }`}>
+                             <div className="w-full h-full bg-gradient-to-l from-[#00ff9d] to-transparent blur-md animate-pulse" />
+                             <div className="absolute top-1/2 right-0 -translate-y-1/2 w-10 h-2 bg-white blur-sm" />
+                        </div>
+                    )}
+
                     {/* Speed Lines */}
                     {isRacing && racerSpeed === 'fast' && (
                         <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
@@ -482,41 +527,68 @@ export const RacingChart: React.FC = () => {
       )}
 
       {/* TELEMETRY OVERLAY - Compact for Mobile (Hidden during splashes) */}
+      {/* TELEMETRY OVERLAY - Mobile Optimized "Floating Wings" */}
       {!countdown && !showResultSplash && (
-        <div className="absolute top-2 sm:top-5 left-2 sm:left-5 right-2 sm:right-5 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0 pointer-events-none z-50">
-           {/* LEFT: Race Status - Compact Mobile */}
-           <div className="bg-black/90 backdrop-blur-md px-2 sm:px-4 py-1.5 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 shadow-xl flex gap-2 sm:gap-4">
-               <div>
-                  <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Market</div>
-                  <div className="text-sm sm:text-xl font-black text-white italic">{selectedMarket}</div>
-               </div>
-               <div className="w-px bg-white/20" />
-               <div>
-                  <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Status</div>
-                  <div className={`text-[10px] sm:text-sm font-bold ${isRacing ? 'text-green-400 animate-pulse' : 'text-yellow-500'}`}>
-                      {isRacing ? '● LIVE' : '● READY'}
-                  </div>
-               </div>
-           </div>
+        <>
+            {/* LEFT WING: Market & Status */}
+            <div className="absolute top-4 left-0 pl-2 lg:pl-6 z-50 pointer-events-none">
+                <div className="flex flex-col gap-1 origin-left transform skew-x-[10deg]">
+                    <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-r-lg p-2 pr-6 shadow-[5px_5px_0_rgba(0,0,0,0.2)] border-l-0 relative group overflow-hidden">
+                        {/* Status bar accent */}
+                        <div className={`absolute top-0 bottom-0 left-0 w-1 ${isRacing ? 'bg-[#00ff9d] shadow-[0_0_10px_#00ff9d]' : 'bg-yellow-500 shadow-[0_0_10px_#eab308]'}`} />
 
-           {/* RIGHT: Live Telemetry */}
-           {(isRacing) && startPrice && (
-               <div className="bg-black/90 backdrop-blur-md px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-white/20 shadow-2xl flex items-center gap-3 sm:gap-6 animate-in slide-in-from-right-10 duration-500">
-                   {/* Direction Arrow */}
-                   <div className={`text-base sm:text-2xl ${betDirection === 'UP' ? 'text-green-500' : 'text-red-500'}`}>
-                      {betDirection === 'UP' ? '▲' : '▼'}
-                   </div>
+                        <div className="flex items-center gap-4 transform -skew-x-[10deg]">
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-gray-400 font-mono font-bold uppercase tracking-widest leading-none mb-0.5">Market</span>
+                                <span className="text-sm font-black text-white uppercase italic tracking-tighter shadow-black drop-shadow-sm">{selectedMarket}</span>
+                            </div>
+                            <div className="w-px h-6 bg-white/20" />
+                             <div className="flex flex-col">
+                                <span className="text-[9px] text-gray-400 font-mono font-bold uppercase tracking-widest leading-none mb-0.5">Signal</span>
+                                <span className={`text-xs font-bold animate-pulse ${isRacing ? 'text-[#00ff9d]' : 'text-yellow-500'}`}>
+                                    {isRacing ? '● LIVE' : '○ IDLE'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                   {/* PnL Big Display */}
-                   <div className="flex flex-col items-end min-w-[60px] sm:min-w-[80px]">
-                      <div className="text-gray-500 text-[8px] sm:text-[10px] font-mono uppercase">PnL</div>
-                      <div className={`font-black text-lg sm:text-2xl tracking-tighter ${displayPnl >= 0 ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}>
-                          {displayPnl >= 0 ? '+' : ''}{displayPnl.toFixed(2)}%
-                      </div>
-                   </div>
-               </div>
-           )}
-        </div>
+            {/* RIGHT WING: PnL & Direction */}
+            {(isRacing) && startPrice && (
+                <div className="absolute top-4 right-0 pr-2 lg:pr-6 z-50 pointer-events-none">
+                    <div className="flex justify-end transform -skew-x-[10deg]">
+                         <div className={`
+                             bg-black/80 backdrop-blur-md border border-white/10 rounded-l-lg p-2 pl-6 shadow-[-5px_5px_0_rgba(0,0,0,0.2)] border-r-0 
+                             relative group overflow-hidden animate-in slide-in-from-right-10 duration-500
+                         `}>
+                             <div className="absolute top-0 bottom-0 right-0 w-1 bg-white/20" />
+                             
+                             {/* Dynamic Background Glow */}
+                             <div className={`absolute inset-0 opacity-20 ${displayPnl >= 0 ? 'bg-gradient-to-l from-green-500/50' : 'bg-gradient-to-l from-red-500/50'}`} />
+
+                             <div className="flex items-center gap-4 transform skew-x-[10deg]">
+                                 <div className="flex flex-col items-end">
+                                    <span className="text-[9px] text-gray-400 font-mono font-bold uppercase tracking-widest leading-none mb-0.5">Trend</span>
+                                    <div className={`text-lg leading-none ${betDirection === 'UP' ? 'text-green-500' : 'text-red-500'}`}>
+                                       {betDirection === 'UP' ? '▲ LONG' : '▼ SHORT'}
+                                    </div>
+                                 </div>
+
+                                 <div className="w-px h-6 bg-white/20" />
+
+                                 <div className="flex flex-col items-end min-w-[70px]">
+                                     <span className="text-[9px] text-gray-400 font-mono font-bold uppercase tracking-widest leading-none mb-0.5">PnL</span>
+                                     <div className={`text-xl font-black font-mono tracking-tighter leading-none ${displayPnl >= 0 ? 'text-[#00ff9d] drop-shadow-[0_0_8px_rgba(0,255,157,0.5)]' : 'text-[#ff0055] drop-shadow-[0_0_8px_rgba(255,0,85,0.5)]'}`}>
+                                        {displayPnl >= 0 ? '+' : ''}{displayPnl.toFixed(2)}%
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            )}
+        </>
       )}
 
     </div>

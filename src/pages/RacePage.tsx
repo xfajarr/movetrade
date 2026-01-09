@@ -13,15 +13,9 @@ export const RacePage: React.FC<RacePageProps> = ({ onBack }) => {
   const [panelOpen, setPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'history' | 'leaderboard'>('history');
 
-  const openHistory = () => {
-    setActiveTab('history');
-    setPanelOpen(true);
-  };
-
-  const openLeaderboard = () => {
-    setActiveTab('leaderboard');
-    setPanelOpen(true);
-  };
+  // Supress unused
+  void setPanelOpen;
+  void setActiveTab;
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-black selection:bg-game-accent selection:text-black animate-in fade-in duration-700">
@@ -36,7 +30,7 @@ export const RacePage: React.FC<RacePageProps> = ({ onBack }) => {
 
       {/* Top HUD */}
       <div className="flex-none z-40 relative border-b border-white/5 bg-black/40 backdrop-blur-sm">
-        <TopBar onToggleHistory={openHistory} onToggleLeaderboard={openLeaderboard} />
+        <TopBar />
         
         {/* Menu/Back Button (Desktop) */}
         <button
@@ -79,7 +73,7 @@ export const RacePage: React.FC<RacePageProps> = ({ onBack }) => {
           {/* Decorative Top Border for Deck */}
           <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-game-accent/50 to-transparent shadow-[0_0_10px_#00f0ff]" />
 
-          <div className="bg-[#050b14]/90 backdrop-blur-xl pb-24 lg:pb-safe pt-2 px-2 lg:px-4 lg:py-4">
+          <div className="bg-[#050b14]/90 backdrop-blur-xl pb-16 lg:pb-safe pt-2 px-2 lg:px-4 lg:py-4">
              <div className="max-w-4xl mx-auto w-full flex flex-col lg:flex-row items-end lg:items-center gap-3 lg:gap-8 pb-3 lg:pb-0">
                  
                  {/* Bet Configuration Module */}
