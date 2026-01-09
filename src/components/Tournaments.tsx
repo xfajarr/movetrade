@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSocialStore } from '../features/social/store/socialStore';
 
 export const Tournaments: React.FC = () => {
-  const tournaments = useGameStore((state) => state.tournaments);
-  const joinTournament = useGameStore((state) => state.joinTournament);
+  const tournaments = useSocialStore((state) => state.tournaments);
+  const joinTournament = useSocialStore((state) => state.joinTournament);
   const [open, setOpen] = useState(true);
 
   const formatTime = (ms: number) => {

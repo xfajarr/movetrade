@@ -13,7 +13,9 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 
-import { useGameStore } from '../../store/useGameStore';
+import { useGameStore } from '../../features/game/store/gameStore';
+import { usePlayerStore } from '../../features/player/store/playerStore';
+import { useMarketStore } from '../../features/market/store/marketStore';
 import { getPricePrecision, formatPrice } from '../../utils/formatPrice';
 
 // Chart modules
@@ -36,10 +38,10 @@ export const LiveChart: React.FC = () => {
   const lastPrecisionRef = useRef<number>(0);
 
   // Store state
-  const activeBets = useGameStore((state) => state.player.activeBets);
-  const history = useGameStore((state) => state.player.history);
-  const currentPrice = useGameStore((state) => state.currentPrice);
-  const selectedMarket = useGameStore((state) => state.selectedMarket);
+  const activeBets = useGameStore((state) => state.activeBets);
+  const history = usePlayerStore((state) => state.history);
+  const currentPrice = useMarketStore((state) => state.currentPrice);
+  const selectedMarket = useMarketStore((state) => state.selectedMarket);
 
   // Custom hooks
   const { outcomeFlash } = useOutcomeFlash({ history });

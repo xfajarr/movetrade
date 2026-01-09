@@ -19,7 +19,6 @@ interface DriverInfo {
     handling: number;
     acceleration: number;
   };
-  color: string;
 }
 
 const DRIVERS: DriverInfo[] = [
@@ -27,22 +26,19 @@ const DRIVERS: DriverInfo[] = [
     market: 'SOL',
     name: 'SOL Rider',
     image: '/motogp_1.png',
-    stats: { speed: 95, handling: 88, acceleration: 92 },
-    color: '#9945FF'
+    stats: { speed: 95, handling: 88, acceleration: 92 }
   },
   {
     market: 'ETH',
     name: 'ETH Champion',
     image: '/motogp_blue_transparent.png',
-    stats: { speed: 92, handling: 95, acceleration: 88 },
-    color: '#627EEA'
+    stats: { speed: 92, handling: 95, acceleration: 88 }
   },
   {
     market: 'BTC',
     name: 'BTC Legend',
     image: '/motogp_orange_transparent.png',
-    stats: { speed: 98, handling: 85, acceleration: 95 },
-    color: '#F7931A'
+    stats: { speed: 98, handling: 85, acceleration: 95 }
   }
 ];
 
@@ -62,203 +58,274 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ onStartRace }) =
 
   const selectedDriverInfo = DRIVERS.find(d => d.market === selectedDriver);
 
+  // Helper for rendering stat bars
+  const renderStatBar = (label: string, value: number) => (
+    <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex justify-between text-[10px] uppercase font-bold tracking-wider text-gray-400 font-mono">
+        <span>{label}</span>
+        <span className="text-game-accent">{value}%</span>
+      </div>
+      <div className="h-2 w-full bg-black/60 skew-x-[-15deg] p-0.5 rounded-sm border border-white/5">
+        <div 
+          className="h-full bg-gradient-to-r from-cyan-800 to-game-accent shadow-[0_0_10px_rgba(34,211,238,0.4)] transition-all duration-700 ease-out rounded-sm"
+          style={{ width: `${value}%` }} 
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-[#0a0f1c] via-[#0f172a] to-[#0a0f1c] text-white overflow-auto pb-safe">
+    <div className="h-full w-full bg-game-dark text-white overflow-y-auto pb-safe font-sans selection:bg-game-accent selection:text-black">
       
-      {/* Header */}
-      <div className="relative z-10 border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent tracking-tight mb-2">
-            🏁 RACE LOBBY
-          </h1>
-          <p className="text-gray-400 font-mono text-xs sm:text-sm">Choose your mode and driver</p>
-        </div>
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-game-accent/5 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 blur-[150px] rounded-full" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8 pb-24 sm:pb-8">
+      <div className="h-full w-full max-w-7xl mx-auto flex flex-col lg:block lg:pb-12">
         
-        {/* Game Mode Selection */}
-        <section>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-            <span className="w-1.5 sm:w-2 h-8 sm:h-10 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
-            SELECT GAME MODE
-          </h2>
+        {/* Scrollable Main Content Area for Mobile */}
+        <div className="flex-1 overflow-y-auto lg:overflow-visible no-scrollbar pb-32 lg:pb-0">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Sprint Mode - ACTIVE */}
-            <button
-              onClick={() => setSelectedMode('sprint')}
-              className={`
-                group relative bg-gradient-to-br from-cyan-900/40 to-blue-900/40 backdrop-blur-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300
-                active:scale-95 touch-manipulation
-                ${selectedMode === 'sprint' 
-                  ? 'border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.4)] sm:shadow-[0_0_50px_rgba(34,211,238,0.4)]' 
-                  : 'border-white/10 active:border-cyan-400/50'}
-              `}
-            >
-              {selectedMode === 'sprint' && (
-                <div className="absolute -top-3 sm:-top-4 -right-3 sm:-right-4 bg-cyan-400 text-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-black shadow-xl animate-pulse z-10">
-                  ACTIVE
-                </div>
-              )}
-              
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">⚡</span>
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl sm:text-2xl font-black text-white">SPRINT MODE</h3>
-                    <p className="text-cyan-400 text-xs sm:text-sm font-bold">Solo Racing</p>
-                  </div>
-                </div>
-                
-                <p className="text-gray-300 text-xs sm:text-sm mb-4 sm:mb-6">
-                  Race solo in quick 10-second sprints. Go LONG or SHORT and race against time!
-                </p>
-                
-                <div className="space-y-2 bg-black/30 rounded-xl p-3 sm:p-4 border border-cyan-500/20">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-green-400 flex-shrink-0">✓</span>
-                    <span className="text-gray-300">Quick 10s races</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-green-400 flex-shrink-0">✓</span>
-                    <span className="text-gray-300">LONG/SHORT positions</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-green-400 flex-shrink-0">✓</span>
-                    <span className="text-gray-300">Instant rewards</span>
-                  </div>
-                </div>
+          <div className="px-4 py-4 lg:px-8 lg:py-8 flex flex-col gap-6 lg:gap-8">
+            {/* Header */}
+            <header className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-4 duration-700 shrink-0">
+              <div className="flex items-center gap-2">
+                 <div className="h-0.5 bg-game-accent w-8 shadow-[0_0_10px_#00f0ff]" />
+                 <h4 className="text-game-accent font-mono text-[10px] tracking-[0.2em] uppercase font-bold text-shadow-glow">Configuration</h4>
               </div>
-            </button>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black italic tracking-tighter uppercase text-white drop-shadow-xl leading-none">
+                RACE <span className="text-transparent bg-clip-text bg-gradient-to-r from-game-accent via-cyan-400 to-blue-500 animate-gradient-x">LOBBY</span>
+              </h1>
+              <p className="text-gray-400 font-mono text-xs max-w-lg border-l-2 border-game-accent/20 pl-3 py-0.5 hidden sm:block">
+                Initialize race parameters. Select competition mode and driver configuration.
+              </p>
+            </header>
 
-            {/* Grand Race - COMING SOON */}
-            <button
-              disabled
-              className="group relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 border-white/10 overflow-hidden cursor-not-allowed touch-manipulation"
-            >
-              {/* Blur overlay */}
-              <div className="absolute inset-0 backdrop-blur-[2px] bg-black/40 z-20 rounded-2xl sm:rounded-3xl"></div>
-              
-              {/* Coming Soon Badge */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-base sm:text-xl shadow-2xl border-2 border-white/20 rotate-[-5deg]">
-                COMING SOON
-              </div>
-              
-              <div className="relative z-10 opacity-50">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">🏆</span>
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl sm:text-2xl font-black text-white">GRAND RACE</h3>
-                    <p className="text-purple-400 text-xs sm:text-sm font-bold">Tournament Mode</p>
-                  </div>
-                </div>
+            {/* Desktop Split Layout Wrapper */}
+            <div className="flex flex-col lg:flex-row lg:gap-12 lg:items-start">
                 
-                <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
-                  Compete in multiplayer tournaments with huge prize pools and global rankings!
-                </p>
-                
-                <div className="space-y-2 bg-black/30 rounded-xl p-3 sm:p-4 border border-purple-500/20">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-purple-400 flex-shrink-0">★</span>
-                    <span className="text-gray-400">Multiplayer tournaments</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-purple-400 flex-shrink-0">★</span>
-                    <span className="text-gray-400">Massive prize pools</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-purple-400 flex-shrink-0">★</span>
-                    <span className="text-gray-400">Global leaderboards</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
-        </section>
-
-        {/* Driver Selection - Only show for Sprint Mode */}
-        {selectedMode === 'sprint' && (
-          <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-xl sm:text-2xl font-black text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-              <span className="w-1.5 sm:w-2 h-6 sm:h-8 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-full"></span>
-              SELECT YOUR DRIVER
-            </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {DRIVERS.map((driver) => (
-                <button
-                  key={driver.market}
-                  onClick={() => setSelectedDriver(driver.market)}
-                  className={`
-                    group relative bg-black/40 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 transition-all duration-300
-                    active:scale-95 touch-manipulation
-                    ${selectedDriver === driver.market 
-                      ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)] sm:shadow-[0_0_30px_rgba(250,204,21,0.3)]' 
-                      : 'border-white/10 active:border-yellow-400/50'}
-                  `}
-                >
-                  {selectedDriver === driver.market && (
-                    <div className="absolute -top-2 sm:-top-3 -right-2 sm:-right-3 bg-yellow-400 text-black px-2 sm:px-3 py-1 rounded-full text-xs font-black shadow-lg">
-                      ✓ SELECTED
-                    </div>
-                  )}
-                  
-                  <div className="relative h-32 sm:h-48 flex items-center justify-center mb-3 sm:mb-4 overflow-hidden rounded-xl">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${selectedDriver === driver.market ? 'from-yellow-500/20 to-orange-500/20' : 'from-white/5 to-transparent'} rounded-xl`}></div>
-                    <img 
-                      src={driver.image} 
-                      alt={driver.name}
-                      className="relative z-10 w-28 h-28 sm:w-40 sm:h-40 object-contain"
-                    />
+                {/* Left Column / Mobile Top: Game Mode Selection */}
+                <section className="shrink-0 lg:w-1/3 flex flex-col gap-3">
+                  <div className="flex items-center gap-2 lg:hidden px-1">
+                      <div className="h-1 bg-game-accent w-4" />
+                      <h2 className="text-xs font-bold uppercase tracking-wider font-sans text-gray-300">Select Mode</h2>
                   </div>
                   
-                  <h3 className="text-lg sm:text-xl font-black text-white mb-1 sm:mb-2">{driver.name}</h3>
-                  <div className="text-xs sm:text-sm font-mono text-gray-400 mb-3 sm:mb-4">{driver.market}</div>
-                  
-                  <div className="space-y-1.5 sm:space-y-2">
-                    {Object.entries(driver.stats).map(([stat, value]) => (
-                      <div key={stat} className="flex justify-between items-center">
-                        <span className="text-[10px] sm:text-xs text-gray-400 uppercase">{stat}</span>
-                        <div className="flex-1 mx-2 sm:mx-3 h-1 sm:h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
-                            style={{ width: `${value}%` }}
-                          ></div>
+                  {/* Mobile: Horizontal Scroll | Desktop: Vertical Stack */}
+                  <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 py-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0 lg:grid lg:grid-cols-1 [&::-webkit-scrollbar]:hidden">
+                    {/* Sprint Mode - ACTIVE */}
+                    <button
+                      onClick={() => setSelectedMode('sprint')}
+                      className={`
+                        snap-center min-w-[85vw] sm:min-w-[320px] lg:min-w-0 flex-1
+                        relative overflow-hidden group rounded-2xl p-4 transition-all duration-300 border text-left
+                        backdrop-blur-xl
+                        ${selectedMode === 'sprint' 
+                          ? 'bg-game-panel/80 border-game-accent shadow-[0_0_20px_rgba(0,240,255,0.1)] ring-1 ring-game-accent/50 lg:scale-[1.02]' 
+                          : 'bg-game-panel/40 border-white/5 hover:border-game-accent/40 hover:bg-game-panel/60'
+                        }
+                      `}
+                    >
+                      <div className="relative z-10 flex flex-col gap-3">
+                        <div className="flex justify-between items-start">
+                           <div className={`
+                             w-10 h-10 rounded-lg flex items-center justify-center text-xl shadow-lg
+                             ${selectedMode === 'sprint' ? 'bg-gradient-to-br from-game-accent to-blue-600 text-black shadow-game-accent/20' : 'bg-white/5 text-gray-500'}
+                           `}>
+                             ⚡
+                           </div>
+                           {selectedMode === 'sprint' && (
+                              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-game-accent/10 border border-game-accent/30 rounded-full backdrop-blur-md">
+                                  <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-game-accent opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-game-accent"></span>
+                                  </span>
+                                  <span className="text-[9px] font-bold text-game-accent tracking-widest">ONLINE</span>
+                              </div>
+                          )}
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold text-white">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+                        
+                        <div>
+                          <h3 className="text-lg lg:text-xl font-black font-sans uppercase italic mb-0.5 tracking-wide">Sprint Mode</h3>
+                          <p className="text-[10px] text-gray-400 font-mono">PvE Time Trial • 10s</p>
+                        </div>
 
-        {/* Start Race Button - Only for Sprint Mode */}
-        {selectedMode === 'sprint' && (
-          <div className="fixed sm:sticky bottom-20 sm:bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0f1c] via-[#0f172a]/95 to-transparent pt-6 sm:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500 z-40">
-            <div className="max-w-3xl mx-auto">
-              <button
-                onClick={handleStartRace}
-                className="w-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 active:scale-95 text-black font-black text-base sm:text-xl py-4 sm:py-6 rounded-xl sm:rounded-2xl shadow-[0_0_30px_rgba(251,191,36,0.5)] sm:shadow-[0_0_50px_rgba(251,191,36,0.5)] transition-all duration-300 border-2 border-yellow-300 touch-manipulation"
-              >
-                🏁 START SPRINT - {selectedDriverInfo?.name.toUpperCase()}
-              </button>
-              
-              <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-400 font-mono">
-                Mode: <span className="text-cyan-400 font-bold">Sprint</span> | Driver: <span className="text-yellow-400 font-bold">{selectedDriverInfo?.name}</span>
-              </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {['Rapid Fire', '10s Intervals'].map((tag) => (
+                            <span key={tag} className="px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-[9px] text-gray-300 font-mono">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Hover Shine Effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]" />
+                    </button>
+
+                    {/* Grand Race - COMING SOON */}
+                    <div className="snap-center min-w-[85vw] sm:min-w-[320px] lg:min-w-0 flex-1 relative overflow-hidden rounded-2xl p-4 border border-white/5 bg-[#050b14]/60 backdrop-blur-sm grayscale opacity-80 cursor-not-allowed">
+                      <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.01)_10px,rgba(255,255,255,0.01)_20px)]" />
+                      <div className="absolute top-3 right-3">
+                          <div className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-full">
+                              <span className="text-[9px] font-bold text-gray-500 tracking-widest">COMING SOON</span>
+                          </div>
+                      </div>
+                      <div className="relative z-10 flex flex-col gap-3 opacity-60">
+                          <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl text-gray-500">
+                            🏆
+                          </div>
+                          <div>
+                            <h3 className="text-lg lg:text-xl font-black font-sans uppercase italic mb-0.5 tracking-wide text-gray-500">Grand Race</h3>
+                            <p className="text-[10px] text-gray-600 font-mono">Multiplayer Tournament</p>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Right Column / Mobile Bottom: Driver Selection + Start Button */}
+                <div className="lg:w-2/3 flex flex-col gap-4">
+                  
+                   {/* Driver Selection */}
+                   {selectedMode === 'sprint' && (
+                    <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150">
+                       <div className="flex items-center gap-2 mt-3 mb-3 px-1">
+                          <div className="h-0.5 bg-game-accent w-4 shadow-[0_0_8px_#00f0ff]" />
+                          <h2 className="text-xs font-bold uppercase tracking-wider font-sans text-gray-300">Select Driver</h2>
+                       </div>
+
+                       {/* Mobile: Horizontal Snap Carousel | Desktop: Grid */}
+                       <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 py-4 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 [&::-webkit-scrollbar]:hidden">
+                         {DRIVERS.map((driver) => {
+                           const isSelected = selectedDriver === driver.market;
+                           return (
+                             <button
+                              key={driver.market}
+                              onClick={() => setSelectedDriver(driver.market)}
+                              className={`
+                                snap-center min-w-[70vw] sm:min-w-[280px] lg:min-w-0
+                                group relative p-0.5 rounded-2xl transition-all duration-300
+                                ${isSelected 
+                                  ? 'bg-game-accent shadow-[0_0_30px_rgba(0,240,255,0.3)] scale-[1.02] z-10' 
+                                  : 'bg-white/5 hover:bg-white/10 hover:scale-[1.01]'
+                                }
+                              `}
+                             >
+                               <div className="h-full bg-[#0f172a] rounded-[14px] p-4 lg:p-3 relative overflow-hidden flex flex-col backdrop-blur-xl text-left">
+                                  {/* Background Grid */}
+                                  <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:10px_10px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
+
+                                  {/* Selected Indicator */}
+                                  {isSelected && (
+                                     <div className="absolute top-2 right-2 z-20 animate-in zoom-in duration-300">
+                                        <div className="w-5 h-5 bg-game-accent text-black rounded-full flex items-center justify-center shadow-[0_0_10px_#00f0ff]">
+                                           <svg className="w-3 h-3 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                           </svg>
+                                        </div>
+                                     </div>
+                                  )}
+
+                                  {/* Image - Compact */}
+                                  <div className="relative h-24 lg:h-20 mb-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                                      <div className={`
+                                         absolute inset-0 bg-gradient-to-b from-game-accent/20 to-transparent rounded-full blur-xl transform -translate-y-2
+                                         ${isSelected ? 'opacity-50' : 'opacity-0'} transition-opacity duration-500
+                                      `} />
+                                      <img 
+                                        src={driver.image} 
+                                        alt={driver.name}
+                                        className={`
+                                          relative z-10 w-24 h-24 lg:w-20 lg:h-20 object-contain transition-all duration-500 drop-shadow-xl
+                                          ${isSelected ? 'scale-110' : 'grayscale-[0.7] group-hover:grayscale-0'}
+                                        `}
+                                      />
+                                  </div>
+
+                                  {/* Driver Info */}
+                                  <div className={`mb-3 transition-colors duration-300 ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+                                    <h3 className="text-base lg:text-sm font-black uppercase italic tracking-wider mb-0.5 line-clamp-1">
+                                      {driver.name}
+                                    </h3>
+                                    <div className="flex items-center gap-1">
+                                       <span className={`text-[10px] lg:text-[9px] font-mono px-1.5 py-0 rounded ${isSelected ? 'bg-game-accent text-black font-bold' : 'bg-white/10 text-gray-500'}`}>
+                                         {driver.market}
+                                       </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Stats - Compact */}
+                                  <div className="space-y-1.5 mt-auto relative z-10 bg-black/20 p-2 rounded-lg border border-white/5">
+                                     {renderStatBar('Speed', driver.stats.speed)}
+                                     {renderStatBar('Handling', driver.stats.handling)}
+                                     {renderStatBar('Accel', driver.stats.acceleration)}
+                                  </div>
+                               </div>
+                             </button>
+                           );
+                         })}
+                       </div>
+                    </section>
+                  )}
+                </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Fixed Sticky Footer - Docked Action Bar */}
+        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] sm:bottom-0 left-0 right-0 z-50 p-3 pt-0 lg:hidden pointer-events-none">
+           <div className="pointer-events-auto shadow-2xl shadow-game-dark">
+               <button
+                  onClick={handleStartRace}
+                  disabled={!selectedDriver}
+                  className={`
+                     w-full relative group overflow-hidden rounded-xl font-black italic tracking-widest text-lg py-4
+                     transition-all duration-300 active:scale-[0.98]
+                     border shadow-2xl
+                     ${selectedMode === 'sprint' 
+                        ? 'bg-game-accent text-black border-game-accent shadow-[0_0_50px_rgba(0,240,255,0.4)]' 
+                        : 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'}
+                  `}
+               >
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                     <span className="uppercase text-xl">START RACE</span>
+                     <span className="text-2xl animate-pulse">►</span>
+                  </span>
+                  
+                  {/* Glitch/Shine Effect */}
+                  <div className="absolute inset-0 bg-white/40 translate-x-[-100%] animate-[shimmer_3s_infinite] skew-x-12" />
+               </button>
+           </div>
+        </div>
+
+        {/* Desktop Button Location (Restored from previous step) */}
+        <div className="hidden lg:block lg:absolute lg:bottom-12 lg:right-8 lg:w-[calc(66%-2rem)]">
+             <button
+                onClick={handleStartRace}
+                disabled={!selectedDriver}
+                className={`
+                   w-full relative group overflow-hidden rounded-xl font-black italic tracking-widest text-xl py-5
+                   transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]
+                   border-2
+                   ${selectedMode === 'sprint' 
+                      ? 'bg-game-accent text-black border-game-accent shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_50px_rgba(34,211,238,0.5)]' 
+                      : 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'}
+                `}
+             >
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                   <span className="uppercase">START RACE</span>
+                   <span className="text-2xl">►</span>
+                </span>
+                
+                <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
+             </button>
+        </div>
 
       </div>
+
     </div>
   );
 };

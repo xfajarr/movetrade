@@ -1,5 +1,5 @@
 
-import { useGameStore } from '../store/useGameStore';
+import { useMarketStore } from '../features/market/store/marketStore';
 
 let animationFrameId: number;
 
@@ -12,7 +12,7 @@ export const startPriceSimulation = () => {
   let frameCount = 0;
 
   const loop = () => {
-    const state = useGameStore.getState();
+    const state = useMarketStore.getState();
     let currentPrice = state.currentPrice;
 
     frameCount++;
@@ -42,7 +42,7 @@ export const startPriceSimulation = () => {
     }
 
     // Push update
-    state.addPriceTick(currentPrice);
+    state.updatePrice(currentPrice);
 
     animationFrameId = requestAnimationFrame(loop);
   };

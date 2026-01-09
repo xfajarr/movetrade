@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore } from '../features/game/store/gameStore';
 // Timeframe fixed to 10s
 import { BalanceDisplay } from './BalanceDisplay';
 
@@ -8,8 +7,10 @@ interface BetStatusProps {
   verticalMode?: boolean;
 }
 
+import { usePlayerStore } from '../features/player/store/playerStore';
+
 export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) => {
-  const activeBets = useGameStore((state) => state.player.activeBets);
+  const activeBets = useGameStore((state) => state.activeBets);
 
   // Config state
   const betAmount = useGameStore((state) => state.betAmount);
@@ -17,7 +18,7 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
   const leverage = useGameStore((state) => state.leverage);
   const setLeverage = useGameStore((state) => state.setLeverage);
 
-  const balance = useGameStore((state) => state.player.balance);
+  const balance = usePlayerStore((state) => state.balance);
 
   const [showConfig, setShowConfig] = useState(false);
   const [showLeverage, setShowLeverage] = useState(false);
@@ -169,65 +170,51 @@ export const BetStatus: React.FC<BetStatusProps> = ({ verticalMode = false }) =>
         </div>
       )}
 
-      {/* MOBILE: Compact Horizontal Layout */}
-      <div className="lg:hidden">
-        {/* Single Row: Balance | Bet | Leverage */}
-        <div className="flex items-center justify-between gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-2 mb-2">
-          
-          {/* Balance - Compact */}
-          <div className="flex flex-col min-w-0">
-            <span className="text-[8px] text-gray-500 font-bold uppercase">Balance</span>
-            <span className="text-sm font-mono font-black text-white">${balance.toLocaleString()}</span>
-          </div>
+      {/* MOBILE: Cyberpunk Cockpit HUD */}
+      <div className="lg:hidden w-full">
+        {/* Main Data Bar */}
+        <div className="relative flex items-center bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-1 mx-2 mb-2 skew-x-[-12deg] shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden group">
+            
+            {/* Tech Glow Line */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
 
-          {/* Divider */}
-          <div className="w-px h-8 bg-white/10" />
+            <div className="flex items-center justify-between w-full px-4 py-1 skew-x-[12deg]">
+                {/* Balance */}
+                <div className="flex flex-col items-center min-w-[30%] border-r border-white/10 pr-2">
+                    <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest font-mono mb-0.5">Balance</span>
+                    <span className="text-sm font-black text-white tracking-tight drop-shadow-md">${balance.toLocaleString()}</span>
+                </div>
 
-          {/* Bet Amount - Clickable */}
-          <button
-            onClick={() => setShowConfig(!showConfig)}
-            className="flex flex-col min-w-0 flex-1 items-center active:scale-95 transition-transform"
-          >
-            <span className="text-[8px] text-gray-500 font-bold uppercase">Bet</span>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-mono font-black text-cyan-400">${betAmount}</span>
-              <svg
-                className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${showConfig ? 'rotate-180' : ''}`}
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+                {/* Bet Trigger */}
+                <button 
+                    onClick={() => setShowConfig(!showConfig)}
+                    className="flex-1 flex flex-col items-center justify-center active:scale-95 transition-transform"
+                >
+                    <span className="text-[9px] text-yellow-500 font-bold uppercase tracking-widest font-mono mb-0.5 animate-pulse">Wager</span>
+                    <div className="flex items-center gap-1 bg-white/5 px-3 py-0.5 rounded skew-x-[-6deg] border border-white/10">
+                        <span className="text-base font-black text-yellow-400 skew-x-[6deg] drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">${betAmount}</span>
+                    </div>
+                </button>
+
+                {/* Leverage Trigger */}
+                <button 
+                    onClick={() => setShowLeverage(!showLeverage)}
+                    className="flex flex-col items-center min-w-[25%] border-l border-white/10 pl-2 active:scale-95 transition-transform"
+                >
+                    <span className="text-[9px] text-purple-400 font-bold uppercase tracking-widest font-mono mb-0.5">Lev</span>
+                    <span className="text-sm font-black text-purple-300 tracking-tight drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]">{leverage}x</span>
+                </button>
             </div>
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-8 bg-white/10" />
-
-          {/* Leverage */}
-          <button
-            onClick={() => setShowLeverage(!showLeverage)}
-            className="flex flex-col min-w-0 items-center active:scale-95 transition-transform"
-          >
-            <span className="text-[8px] text-gray-500 font-bold uppercase">Leverage</span>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-mono font-black text-purple-400">{leverage}x</span>
-              <svg
-                className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${showLeverage ? 'rotate-180' : ''}`}
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </button>
-
-          {/* Active Bet Indicator */}
-          {activeBets.length > 0 && (
-            <div className="flex items-center gap-1 bg-green-500/20 border border-green-500/30 rounded-lg px-2 py-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-[8px] font-bold text-green-400">LIVE</span>
-            </div>
-          )}
         </div>
+
+        {/* Live Indicator (Floating) */}
+        {activeBets.length > 0 && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-green-500/10 border border-green-500/50 rounded px-2 py-0.5 backdrop-blur-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                <span className="text-[9px] font-bold text-green-400 font-mono uppercase tracking-wider shadow-green-500/50">Live</span>
+            </div>
+        )}
+
 
         {/* Configuration Popup */}
         <div

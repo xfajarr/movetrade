@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore } from '../features/game/store/gameStore';
+import { usePlayerStore } from '../features/player/store/playerStore';
+import { useMarketStore } from '../features/market/store/marketStore';
 import { Direction, Bet } from '../types';
 
 interface ActiveBetItemProps {
@@ -62,9 +64,9 @@ const ActiveBetItem: React.FC<ActiveBetItemProps> = ({ bet, currentPrice }) => {
 };
 
 export const HistoryList: React.FC = () => {
-  const history = useGameStore((state) => state.player.history);
-  const activeBets = useGameStore((state) => state.player.activeBets);
-  const currentPrice = useGameStore((state) => state.currentPrice);
+  const history = usePlayerStore((state) => state.history);
+  const activeBets = useGameStore((state) => state.activeBets);
+  const currentPrice = useMarketStore((state) => state.currentPrice);
   const [open, setOpen] = useState(true);
 
   const hasActivity = history.length > 0 || activeBets.length > 0;

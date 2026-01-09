@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useSocialStore } from '../features/social/store/socialStore';
 
 export const Leaderboard: React.FC = () => {
-  const leaderboard = useGameStore((state) => state.leaderboard);
+  const leaderboard = useSocialStore((state) => state.leaderboard);
   const [open, setOpen] = useState(true);
 
   return (

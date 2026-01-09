@@ -5,7 +5,7 @@
  * - FINISH LINE moves based on TIME (linear)
  * - RACER moves based on real-time PRICE changes
  * - Authentic Asphalt & Gantry visuals
- * - Telemetry Overlay for Race Info
+ * - Gamified Elements: Countdown, Result Splash, Speed Lines
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,6 +41,10 @@ export const RacingChart: React.FC = () => {
   const [raceResult, setRaceResult] = useState<'WIN' | 'LOSS' | null>(null);
   const [finalPnl, setFinalPnl] = useState<number | null>(null);
   
+  // Gamification State
+  const [countdown, setCountdown] = useState<number | null>(null); // 3, 2, 1, null
+  const [showResultSplash, setShowResultSplash] = useState(false);
+
   // Speed/velocity for visual effects
   const [priceVelocity, setPriceVelocity] = useState(0);
   const [racerSpeed, setRacerSpeed] = useState<'fast' | 'slow' | 'normal'>('normal');
@@ -48,6 +52,7 @@ export const RacingChart: React.FC = () => {
   // Audio refs
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const winSoundRef = useRef<HTMLAudioElement | null>(null);
+  const countdownRef = useRef<HTMLAudioElement | null>(null);
   
   // Refs for tracking (Performance Optimization)
   const racerPosRef = useRef(0);
@@ -103,21 +108,21 @@ export const RacingChart: React.FC = () => {
     
     winSoundRef.current = new Audio('/winning-sound.mp3');
     winSoundRef.current.volume = 0.5;
+
+    // Optional countdown sound
+    // countdownRef.current = new Audio('/countdown.mp3'); 
     
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (winSoundRef.current) {
-        winSoundRef.current.pause();
-        winSoundRef.current = null;
-      }
+      [audioRef, winSoundRef, countdownRef].forEach(ref => {
+          if (ref.current) {
+              ref.current.pause();
+              ref.current = null;
+          }
+      });
     };
   }, []);
 
-  // Reset when market changes
-  useEffect(() => {
+  const resetRace = () => {
     setStartPrice(null);
     startPriceRef.current = null;
     setDisplayRacerPos(0);
@@ -127,6 +132,8 @@ export const RacingChart: React.FC = () => {
     setShowConfetti(false);
     setRaceResult(null);
     setFinalPnl(null);
+    setCountdown(null);
+    setShowResultSplash(false);
     racerPosRef.current = 0;
     finishPosRef.current = 0;
     
@@ -134,36 +141,26 @@ export const RacingChart: React.FC = () => {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+  };
+
+  // Reset when market changes
+  useEffect(() => {
+    resetRace();
   }, [selectedMarket]);
 
-  // Handle bet state changes
+  // Handle bet state changes & Countdown Logic
   useEffect(() => {
     const hasActiveBets = activeBets.length > 0;
     
-    if (hasActiveBets && !isRacing) {
-      // START RACE
-      setIsRacing(true);
-      setStartPrice(currentPrice);
-      startPriceRef.current = currentPrice;
-      setBetDirection(activeBets[0].direction);
-      setShowConfetti(false);
-      setRaceResult(null);
-      setFinalPnl(null);
-      
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(console.error);
-      }
-      
-      // Reset positions
-      racerPosRef.current = 0;
-      finishPosRef.current = 0;
-      setDisplayRacerPos(0);
-      setDisplayFinishPos(0);
+    // 1. TRIGGER COUNTDOWN
+    if (hasActiveBets && !isRacing && countdown === null && !raceResult) {
+       setCountdown(3);
+       setBetDirection(activeBets[0].direction);
     }
     
+    // 2. END RACE LOGIC
     if (!hasActiveBets && isRacing) {
-      // END RACE - Compute final result
+      // End Race
       const finalIsAhead = racerPosRef.current > finishPosRef.current;
       const sPrice = startPriceRef.current;
       const curPrice = currentPriceRef.current;
@@ -177,6 +174,7 @@ export const RacingChart: React.FC = () => {
       }
       
       setIsRacing(false);
+      setShowResultSplash(true); // Show Splash Screen
       
       if (audioRef.current) {
         audioRef.current.pause();
@@ -185,32 +183,36 @@ export const RacingChart: React.FC = () => {
       
       if (finalIsAhead) {
         setShowConfetti(true);
-        // Play winning sound!
         if (winSoundRef.current) {
           winSoundRef.current.currentTime = 0;
           winSoundRef.current.play().catch(console.error);
         }
       }
-      
-      // IMMEDIATE RESET of racer to start line
-      racerPosRef.current = 0;
-      finishPosRef.current = 0;
-      setDisplayRacerPos(0);
-      setDisplayFinishPos(0);
-
-      // Full cleanup after delay
-      setTimeout(() => {
-        if (useGameStore.getState().activeBets.length === 0) {
-            setStartPrice(null);
-            startPriceRef.current = null;
-            setShowConfetti(false);
-            setBetDirection(null);
-            setRaceResult(null);
-            setFinalPnl(null);
-        }
-      }, 4000);
     }
-  }, [activeBets.length, isRacing, currentPrice, betDirection]);
+  }, [activeBets.length, isRacing, currentPrice, betDirection, countdown, raceResult]);
+
+  // COUNTDOWN EFFECT
+  useEffect(() => {
+      if (countdown !== null && countdown > 0) {
+          const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+          return () => clearTimeout(timer);
+      } else if (countdown === 0) {
+          // START RACE
+          const timer = setTimeout(() => {
+              setCountdown(null);
+              setIsRacing(true);
+              setStartPrice(currentPriceRef.current);
+              startPriceRef.current = currentPriceRef.current;
+              
+              if (audioRef.current) {
+                  audioRef.current.currentTime = 0;
+                  audioRef.current.play().catch(console.error);
+              }
+          }, 500); // Short delay on "GO!"
+          return () => clearTimeout(timer);
+      }
+  }, [countdown]);
+
 
   // ANIMATION LOOP
   useEffect(() => {
@@ -230,10 +232,6 @@ export const RacingChart: React.FC = () => {
       setDisplayFinishPos(timeProgress);
 
       // 2. UPDATE RACER (PURELY BASED ON PnL)
-      // Racer position = 50 (midpoint) + PnL boost
-      // If PnL is positive, racer is ahead of center
-      // If PnL is negative, racer is behind center
-      // To WIN: racer must be at or past 100 (finish line position)
       const curPrice = currentPriceRef.current;
       const sPrice = startPriceRef.current;
 
@@ -243,23 +241,14 @@ export const RacingChart: React.FC = () => {
           // Calculate effective PnL based on direction
           let pnlPercent: number;
           if (betDirection === 'UP') {
-            // LONG: profit when price goes UP
             pnlPercent = priceChangePercent;
           } else {
-            // SHORT: profit when price goes DOWN
             pnlPercent = -priceChangePercent;
           }
           
-          // Racer position:
-          // - Base: time progress (racer moves with time)
-          // - Boost: PnL amplified (positive PnL = faster, negative PnL = slower)
-          // - Sensitivity: how much PnL affects position (higher = more dramatic)
           const sensitivity = 100; // 1% PnL = 1 position point
           const pnlBoost = pnlPercent * sensitivity;
           
-          // Racer position = time progress + PnL boost
-          // If positive PnL, racer races ahead of the time
-          // If negative PnL, racer falls behind the time
           let racerPosition = timeProgress + pnlBoost;
           racerPosition = Math.max(0, Math.min(100, racerPosition));
           
@@ -301,14 +290,22 @@ export const RacingChart: React.FC = () => {
   return (
     <div className="relative w-full h-full bg-[#1e293b] overflow-hidden select-none flex items-center justify-center p-2 sm:p-6">
       
-      {/* Background */}
-      <div className="absolute inset-0 bg-[#064e3b] opacity-20" />
+      {/* Background with Motion Blur effect when racing */}
+      <div className={`absolute inset-0 bg-[#064e3b] transition-opacity duration-1000 ${isRacing ? 'opacity-30' : 'opacity-10'}`} />
+      {isRacing && (
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay animate-pulse" />
+      )}
       
       {/* TRACK - Compact on Mobile */}
-      <div className="relative w-full max-w-7xl h-40 sm:h-64 rounded-lg sm:rounded-xl overflow-hidden shadow-2xl flex flex-col border-2 sm:border-4 border-[#333]">
+      <div className="relative w-full max-w-7xl h-40 sm:h-64 rounded-lg sm:rounded-xl overflow-hidden shadow-2xl flex flex-col border-2 sm:border-4 border-[#333] transform transition-transform duration-500 hover:scale-[1.01]">
         <div className="h-4 w-full z-10" style={curbStyle} />
         
         <div className="flex-1 relative w-full overflow-hidden" style={asphaltStyle}>
+            {/* Moving Road Markets (Parallax) */}
+            {isRacing && (
+                 <div className="absolute inset-0 z-0 opacity-20 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] bg-[size:200px_100%] animate-slide-left pointer-events-none" />
+            )}
+
             {/* Center Line */}
             <div className="absolute top-1/2 left-0 right-0 h-0 border-t-2 border-dashed border-white/30 w-full" />
             
@@ -317,9 +314,9 @@ export const RacingChart: React.FC = () => {
             <div className="absolute left-16 top-2 text-xs font-bold text-white/50 rotate-90 origin-left">START</div>
 
             {/* FINISH LINE */}
-            {isRacing && (
+            {(isRacing || raceResult) && (
               <div 
-                className="absolute top-0 bottom-0 z-20 flex flex-col items-center"
+                className="absolute top-0 bottom-0 z-20 flex flex-col items-center transition-all duration-300 ease-linear"
                 style={{ left: `${6 + (displayFinishPos / 100) * 90}%` }}
               >
                  <div className="absolute top-0 w-2 h-full bg-gray-400 border-x border-gray-600 shadow-xl" />
@@ -340,7 +337,7 @@ export const RacingChart: React.FC = () => {
                 }}
             >
                 <div className="relative -translate-x-1/2 group">
-                    {/* Speed Lines - show when moving fast */}
+                    {/* Speed Lines */}
                     {isRacing && racerSpeed === 'fast' && (
                         <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
                             {[...Array(5)].map((_, i) => (
@@ -359,17 +356,17 @@ export const RacingChart: React.FC = () => {
                         </div>
                     )}
                     
-                    {/* Bike with dynamic tilt */}
+                    {/* Bike */}
                     <img
                         src={bikeImage}
                         alt="Racer"
                         className={`w-36 h-36 object-contain relative z-10 transition-transform duration-200 ${
-                            racerSpeed === 'fast' ? 'scale-110 -rotate-6' : 
-                            racerSpeed === 'slow' ? 'scale-90 rotate-3' : 
+                            racerSpeed === 'fast' ? 'scale-110 -rotate-3' : 
+                            racerSpeed === 'slow' ? 'scale-90 rotate-2' : 
                             'scale-100'
                         }`}
                         style={{
-                            filter: racerSpeed === 'fast' ? 'drop-shadow(0 0 10px rgba(0,255,255,0.5))' : 'none'
+                            filter: racerSpeed === 'fast' ? 'drop-shadow(0 0 15px rgba(0,255,255,0.6))' : 'none'
                         }}
                     />
                     
@@ -384,11 +381,6 @@ export const RacingChart: React.FC = () => {
                             {displayPnl >= 0 ? '▲' : '▼'} {Math.abs(displayPnl).toFixed(2)}%
                         </div>
                     )}
-                    
-                    {/* Speed indicator glow */}
-                    {isRacing && racerSpeed === 'fast' && (
-                        <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-xl animate-pulse" />
-                    )}
                 </div>
             </div>
         </div>
@@ -396,105 +388,137 @@ export const RacingChart: React.FC = () => {
         <div className="h-4 w-full z-10" style={curbStyle} />
       </div>
 
-      {/* Add keyframes for speed lines */}
+      {/* Global Styles for Keyframes */}
       <style>{`
         @keyframes speedLine {
           0% { transform: translateX(0); opacity: 0; }
           50% { opacity: 1; }
           100% { transform: translateX(150px); opacity: 0; }
         }
+        @keyframes slide-left {
+          from { background-position: 0 0; }
+          to { background-position: -200px 0; }
+        }
+        .animate-slide-left {
+            animation: slide-left 0.5s linear infinite;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
       `}</style>
 
-      {/* TELEMETRY OVERLAY - Compact for Mobile */}
-      <div className="absolute top-2 sm:top-5 left-2 sm:left-5 right-2 sm:right-5 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0 pointer-events-none z-50">
-         {/* LEFT: Race Status - Compact Mobile */}
-         <div className="bg-black/90 backdrop-blur-md px-2 sm:px-4 py-1.5 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 shadow-xl flex gap-2 sm:gap-4">
-             <div>
-                <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Market</div>
-                <div className="text-sm sm:text-xl font-black text-white italic">{selectedMarket}</div>
-             </div>
-             <div className="w-px bg-white/20" />
-             <div>
-                <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Status</div>
-                <div className={`text-[10px] sm:text-sm font-bold ${isRacing ? 'text-green-400 animate-pulse' : (raceResult ? (raceResult === 'WIN' ? 'text-yellow-400' : 'text-red-400') : 'text-yellow-500')}`}>
-                    {isRacing ? '● LIVE' : (raceResult ? `● ${raceResult}` : '● READY')}
-                </div>
-             </div>
-         </div>
-
-         {/* RIGHT: Live Telemetry - Compact Mobile */}
-         {(isRacing || raceResult) && startPrice && (
-             <div className="bg-black/90 backdrop-blur-md px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-white/20 shadow-2xl flex items-center gap-3 sm:gap-6">
-                 {/* Entry */}
-                 <div className="flex flex-col items-center">
-                    <div className="text-gray-500 text-[8px] sm:text-[10px] font-mono uppercase">Entry</div>
-                    <div className="font-mono font-bold text-[10px] sm:text-base text-white">{formatCurrency(startPrice)}</div>
-                 </div>
-
-                 {/* Direction Arrow - Compact */}
-                 <div className={`text-base sm:text-2xl ${betDirection === 'UP' ? 'text-green-500' : 'text-red-500'}`}>
-                    {betDirection === 'UP' ? '▲' : '▼'}
-                 </div>
-
-                 {/* Current */}
-                 <div className="flex flex-col items-center">
-                    <div className="text-gray-500 text-[8px] sm:text-[10px] font-mono uppercase">Current</div>
-                    <div className={`font-mono font-bold text-[11px] sm:text-lg ${displayPnl >= 0 ? 'text-white' : 'text-red-300'}`}>
-                        {formatCurrency(currentPrice)}
-                    </div>
-                 </div>
-
-                 <div className="hidden sm:block w-px h-8 bg-white/20" />
-
-                 {/* PnL Big Display */}
-                 <div className="flex flex-col items-end min-w-[60px] sm:min-w-[80px]">
-                    <div className="text-gray-500 text-[8px] sm:text-[10px] font-mono uppercase">PnL</div>
-                    <div className={`font-black text-lg sm:text-2xl tracking-tighter ${displayPnl >= 0 ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}>
-                        {displayPnl >= 0 ? '+' : ''}{displayPnl.toFixed(2)}%
-                    </div>
-                 </div>
-             </div>
-         )}
-      </div>
-
-      {/* Victory Confetti */}
-      {showConfetti && (
-        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
-          {[...Array(60)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-3 h-3 rounded"
-              style={{
-                top: '-10%',
-                left: `${Math.random() * 100}%`,
-                animation: `fall ${2 + Math.random()}s linear forwards`,
-                backgroundColor: ['#ffd700', '#ff0000', '#ffffff', '#00ff00'][i % 4],
-              }}
-            />
-          ))}
-          <style>{`
-            @keyframes fall {
-                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-            }
-          `}</style>
-          
-          {/* WINNER Banner */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-yellow-400 text-black font-black text-5xl px-10 py-5 rounded-3xl shadow-[0_0_50px_rgba(255,215,0,0.6)] border-4 border-white rotate-[-5deg] animate-bounce">
-              🏆 WINNER!
+      {/* COUNTDOWN OVERLAY */}
+      {countdown !== null && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div key={countdown} className="text-9xl font-black italic text-transparent bg-clip-text bg-gradient-to-br from-game-accent to-white drop-shadow-[0_0_30px_rgba(0,240,255,0.8)] animate-[pop-in_0.5s_ease-out_forwards] p-12">
+                  {countdown === 0 ? 'GO!' : countdown}
+              </div>
           </div>
+      )}
+
+      {/* RESULT SPLASH SCREEN */}
+      {showResultSplash && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
+             <div className="flex flex-col items-center gap-6 animate-in slide-in-from-bottom-10 duration-500">
+                 
+                 {/* Result Title */}
+                 <div className={`text-6xl sm:text-8xl font-black italic uppercase tracking-tighter drop-shadow-[0_0_50px_rgba(0,0,0,0.8)] transform -rotate-3 p-4 pr-8 ${
+                     raceResult === 'WIN' 
+                        ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600' 
+                        : 'text-gray-400'
+                 }`}>
+                     {raceResult === 'WIN' ? 'VICTORY' : 'DEFEAT'}
+                 </div>
+
+                 {/* Outcome Details */}
+                 <div className="bg-[#0f172a]/90 border border-white/10 rounded-2xl p-6 sm:p-10 flex flex-col items-center gap-2 shadow-2xl relative overflow-hidden">
+                     {/* Shine Effect */}
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-50" />
+                     
+                     <div className="text-gray-400 uppercase text-xs font-bold tracking-widest">Performance</div>
+                     <div className={`text-4xl sm:text-5xl font-mono font-black ${raceResult === 'WIN' ? 'text-green-400' : 'text-red-400'}`}>
+                         {finalPnl && finalPnl >= 0 ? '+' : ''}{finalPnl?.toFixed(2)}%
+                     </div>
+                     <div className="mt-2 text-sm text-gray-500 font-mono">
+                         {raceResult === 'WIN' ? 'Target Reached' : 'Target Missed'}
+                     </div>
+
+                     <button 
+                         onClick={resetRace}
+                         className="mt-6 px-10 py-3 bg-white text-black font-black uppercase tracking-wider rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] flex items-center gap-2"
+                     >
+                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                         Continue
+                     </button>
+                 </div>
+             </div>
+             
+             {/* Victory Confetti (Separate Layer) */}
+             {showConfetti && (
+                <div className="absolute inset-0 pointer-events-none z-0">
+                  {[...Array(50)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-2 h-4 sm:w-3 sm:h-6 rounded"
+                      style={{
+                        top: '-10%',
+                        left: `${Math.random() * 100}%`,
+                        animation: `fall ${1.5 + Math.random()}s linear forwards`,
+                        backgroundColor: ['#ffd700', '#ff0000', '#00f0ff', '#ffffff'][i % 4],
+                      }}
+                    />
+                  ))}
+                  <style>{`
+                    @keyframes fall {
+                        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                        100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+                    }
+                  `}</style>
+                </div>
+             )}
         </div>
       )}
-      
-      {/* LOSS Banner */}
-      {raceResult === 'LOSS' && !isRacing && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-600 text-white font-black text-4xl px-10 py-5 rounded-2xl shadow-xl border-4 border-red-900 z-50 animate-pulse">
-            LOSS: {finalPnl?.toFixed(2)}%
+
+      {/* TELEMETRY OVERLAY - Compact for Mobile (Hidden during splashes) */}
+      {!countdown && !showResultSplash && (
+        <div className="absolute top-2 sm:top-5 left-2 sm:left-5 right-2 sm:right-5 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0 pointer-events-none z-50">
+           {/* LEFT: Race Status - Compact Mobile */}
+           <div className="bg-black/90 backdrop-blur-md px-2 sm:px-4 py-1.5 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 shadow-xl flex gap-2 sm:gap-4">
+               <div>
+                  <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Market</div>
+                  <div className="text-sm sm:text-xl font-black text-white italic">{selectedMarket}</div>
+               </div>
+               <div className="w-px bg-white/20" />
+               <div>
+                  <div className="text-gray-400 text-[8px] sm:text-[10px] font-mono uppercase tracking-widest">Status</div>
+                  <div className={`text-[10px] sm:text-sm font-bold ${isRacing ? 'text-green-400 animate-pulse' : 'text-yellow-500'}`}>
+                      {isRacing ? '● LIVE' : '● READY'}
+                  </div>
+               </div>
+           </div>
+
+           {/* RIGHT: Live Telemetry */}
+           {(isRacing) && startPrice && (
+               <div className="bg-black/90 backdrop-blur-md px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-white/20 shadow-2xl flex items-center gap-3 sm:gap-6 animate-in slide-in-from-right-10 duration-500">
+                   {/* Direction Arrow */}
+                   <div className={`text-base sm:text-2xl ${betDirection === 'UP' ? 'text-green-500' : 'text-red-500'}`}>
+                      {betDirection === 'UP' ? '▲' : '▼'}
+                   </div>
+
+                   {/* PnL Big Display */}
+                   <div className="flex flex-col items-end min-w-[60px] sm:min-w-[80px]">
+                      <div className="text-gray-500 text-[8px] sm:text-[10px] font-mono uppercase">PnL</div>
+                      <div className={`font-black text-lg sm:text-2xl tracking-tighter ${displayPnl >= 0 ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}>
+                          {displayPnl >= 0 ? '+' : ''}{displayPnl.toFixed(2)}%
+                      </div>
+                   </div>
+               </div>
+           )}
         </div>
       )}
 
     </div>
   );
 };
-
-export default RacingChart;

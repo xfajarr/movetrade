@@ -3,10 +3,13 @@
  */
 
 export interface LeaderboardEntry {
+    id: string;
     rank: number;
     username: string;
     score: number;
     winRate: number;
+    wins: number;
+    total_races: number;
     isCurrentUser?: boolean;
 }
 

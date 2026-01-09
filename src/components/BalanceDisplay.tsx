@@ -1,19 +1,19 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { usePlayerStore } from '../features/player/store/playerStore';
 
 interface BalanceDisplayProps {
   compact?: boolean;
 }
 
 export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({ compact = false }) => {
-  const balance = useGameStore((state) => state.player.balance);
+  const balance = usePlayerStore((state) => state.balance);
   const [displayedBalance, setDisplayedBalance] = useState(balance);
   const [animClass, setAnimClass] = useState('text-white');
   
   // Animation Refs
-  const requestRef = useRef<number>();
-  const startTimeRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
+  const startTimeRef = useRef<number | undefined>(undefined);
   const startValueRef = useRef<number>(balance);
   const targetValueRef = useRef<number>(balance);
   const prevBalanceRef = useRef<number>(balance);

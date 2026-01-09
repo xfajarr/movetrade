@@ -1,8 +1,11 @@
 
+
 import React, { useState } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore } from '../features/game/store/gameStore'; // Verify path if needed, but mainly we need MarketStore
+import { useMarketStore } from '../features/market/store/marketStore';
 import { Market } from '../types';
 import { formatPrice } from '../utils/formatPrice';
+import { WalletButton } from './wallet/WalletButton';
 
 interface TopBarProps {
   onToggleHistory: () => void;
@@ -46,10 +49,10 @@ const ICONS: Record<Market, React.ReactNode> = {
 };
 
 export const TopBar: React.FC<TopBarProps> = ({ onToggleHistory, onToggleLeaderboard }) => {
-  const selectedMarket = useGameStore((state) => state.selectedMarket);
-  const setMarket = useGameStore((state) => state.setMarket);
-  const price = useGameStore((state) => state.currentPrice);
-  const startPrice = useGameStore((state) => state.startPrice);
+  const selectedMarket = useMarketStore((state) => state.selectedMarket);
+  const setMarket = useMarketStore((state) => state.setMarket);
+  const price = useMarketStore((state) => state.currentPrice);
+  const startPrice = useMarketStore((state) => state.startPrice);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const markets: Market[] = ['BTC', 'ETH', 'SOL'];
@@ -151,6 +154,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onToggleHistory, onToggleLeaderb
         </div>
         
         <div className="flex gap-2">
+          {/* Wallet Button */}
+          <WalletButton />
+
           {/* Tournament/Leaderboard Button */}
           <button 
             onClick={onToggleLeaderboard}

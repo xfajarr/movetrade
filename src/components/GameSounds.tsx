@@ -1,9 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
-import { useGameStore } from '../store/useGameStore';
+import { usePlayerStore } from '../features/player/store/playerStore';
 
 export const GameSounds: React.FC = () => {
-  const history = useGameStore(state => state.player.history);
+  const history = usePlayerStore(state => state.history);
   const prevHistoryLength = useRef(history.length);
 
   useEffect(() => {
